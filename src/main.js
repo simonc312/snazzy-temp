@@ -60,16 +60,19 @@ var toggleTemperatureScale = function(type){
 }
 
 //Components
-
-//input field				
+			
 var myField = Container.template(function($) { return { 
 	width: 250, height: 50, top: 4, left:4, right: 4, skin: nameInputSkin, contents: [
 		Scroller($, { 
 			left: 4, right: 4, top: 4, bottom: 4, active: false, name: "inputScroller",
-			behavior: Object.create(CONTROL.FieldScrollerBehavior.prototype), clip: true, contents: [
+			behavior: Object.create(CONTROL.FieldScrollerBehavior.prototype,{
+			 	onCreate: { value : function(container, data) {
+		            this.data = data;
+		            var self = this;
+		            
+		        }}}), clip: true, contents: [
 				Label($, { 
 					left: 4, top: 4, bottom: 4, skin: THEME.fieldLabelSkin, style: fieldStyle, 
-					//anchor: 'NAME',
 					editable: true, string: $.name, name: "inputLabel"
 				 }),
 				 Label($, {
@@ -79,25 +82,6 @@ var myField = Container.template(function($) { return {
 		})
 	]
 }});
-
-//output field				
-var myOutputField = Container.template(function($) { return { 
-	width: 250, height: 50, top: 4, left:4, right: 4, skin: nameInputSkin, contents: [
-		Scroller($, { 
-			left: 4, right: 4, top: 4, bottom: 4, active: false, name: "outputScroller",
-			behavior: Object.create(CONTROL.FieldScrollerBehavior.prototype), clip: true, contents: [
-				Label($, { 
-					left: 4, top: 4, bottom: 4, skin: THEME.fieldLabelSkin, style: fieldStyle, anchor: 'NAME',
-					editable: true, string: $.name, name: "outputLabel"
-				 }),
-				 Label($, {
-	 			 	style:fieldHintStyle, string:"fahrenheit", name:"outputHint"
-				 })
-			]
-		})
-	]
-}});
-
 
 var updateValues = function(value){
 				var value = Math.round(value).toString();
@@ -128,6 +112,8 @@ var buttonBehavior = function(content, data){
 buttonBehavior.prototype = Object.create(BUTTONS.ButtonBehavior.prototype, {
 	onTap: { value:  function(button){
 		var newScaleArray = toggleTemperatureScale(button.first.string);
+		var inputString = field.inputScroller.inputLabel.string;
+		var outputString = outputField.outputScroller.outputLabel.string;
 		button.first.string = newScaleArray[0];
 		if(button === inputTempButton){
 			field.inputScroller.inputHint.string = newScaleArray[1];
@@ -138,9 +124,9 @@ buttonBehavior.prototype = Object.create(BUTTONS.ButtonBehavior.prototype, {
 			slider.behavior.setMin(minValue);
 			slider.behavior.setMax(maxValue);
 			var newValue = (minValue + maxValue)/2;
-			if(field.inputScroller.inputLabel.string.length > 0){
+			if(inputString.length > 0){
 				trace('inside here');
-				newValue = outputField.outputScroller.outputLabel.string;
+				newValue = outputString;
 				updateInputValues(Number(newValue));
 				newValue = field.inputScroller.inputLabel.string;
 			}
@@ -151,7 +137,7 @@ buttonBehavior.prototype = Object.create(BUTTONS.ButtonBehavior.prototype, {
 		else if(button === outputTempButton){
 			outputField.outputScroller.outputHint.string = newScaleArray[1];
 			if(field.inputScroller.inputLabel.string.length > 0)
-				updateValues(Number(field.inputScroller.inputLabel.string));
+				updateValues(Number(inputString));
 			}
 	}}
 });
@@ -187,7 +173,11 @@ var mySlider = SLIDERS.HorizontalSlider.template(function($){ return{
 var logo = new Content({left:0, right:0, top:0, bottom:0, skin: logoSkin});
 var header = new Label({left:0, right:0, top:10, bottom: 4, height: 40, string: "Snazzy Temp", style: labelStyle, name: "header"});
 var field = new myField({ name: "" });
-var outputField = new myOutputField({ name: "" });
+var outputField = new myField({ name: "" });
+outputField.first.name = "outputScroller";
+outputField.first.first.name = "outputLabel";
+outputField.first[1].name = "outputHint";
+outputField.first[1].string = "fahrenheit";
 var inputTempButton = new myButtonTemplate({name:"inputScale",textForLabel:"C"});
 var outputTempButton = new myButtonTemplate({name:"outputScale",textForLabel:"F"});
 var toLabel = new Label({height: 40,top: 0, bottom: 8, string:"to"});
